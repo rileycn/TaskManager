@@ -1,2 +1,2 @@
 hello:
-	gcc example-0.c -o example-0 `pkg-config --cflags --libs gtk4`
+	gcc main.c -o task_manager `pkg-config --cflags --libs gtk4`
