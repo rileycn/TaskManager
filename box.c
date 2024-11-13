@@ -4,8 +4,6 @@
 
 GtkWidget* get_main_box() {
     GtkWidget* box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    //gtk_widget_set_halign(box, GTK_ALIGN_CENTER);
-    //gtk_widget_set_valign(box, GTK_ALIGN_CENTER);
     gtk_widget_set_hexpand(box, TRUE);
     gtk_widget_set_vexpand(box, TRUE);
 
