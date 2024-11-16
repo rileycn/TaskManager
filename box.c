@@ -10,12 +10,12 @@ GtkWidget* get_main_box() {
     GtkWidget *notebook = gtk_notebook_new();
     gtk_widget_set_hexpand(notebook, TRUE);
     gtk_widget_set_vexpand(notebook, TRUE);
-    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), get_system_panel(), gtk_label_new("System"));
-    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), get_processes_panel(), gtk_label_new("Processes"));
-    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), get_resources_panel(), gtk_label_new("Resources"));
-    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), get_file_systems_panel(), gtk_label_new("File Systems"));
+    gtk_notebook_append_page(GTK_CONTAINER(notebook), get_system_panel(), gtk_label_new("System"));
+    gtk_notebook_append_page(GTK_CONTAINER(notebook), get_processes_panel(), gtk_label_new("Processes"));
+    gtk_notebook_append_page(GTK_CONTAINER(notebook), get_resources_panel(), gtk_label_new("Resources"));
+    gtk_notebook_append_page(GTK_CONTAINER(notebook), get_file_systems_panel(), gtk_label_new("File Systems"));
 
-    gtk_box_append(GTK_BOX(box), notebook);
+    gtk_container_add(GTK_CONTAINER(box), notebook);
     
 
     return box;
@@ -26,8 +26,8 @@ GtkWidget* get_system_panel() {
     GtkWidget *title_label = gtk_label_new("System Content Page");
     gtk_widget_set_margin_top(title_label, 20);
     gtk_widget_set_margin_bottom(title_label, 20);
-    gtk_box_append(GTK_BOX(tab), title_label);
-    gtk_box_append(GTK_BOX(tab),  gtk_label_new("System info"));
+    gtk_container_add(GTK_CONTAINER(tab), title_label);
+    gtk_container_add(GTK_CONTAINER(tab),  gtk_label_new("System info"));
     return tab;
 }
 

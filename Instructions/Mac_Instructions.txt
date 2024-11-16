@@ -1,8 +1,0 @@
-Riley Noggle
-
-This is how to get everything working on Mac with gtk & prorgramming
-
-1. Get Homebrew if you haven't installed it yet (https://brew.sh/)
-2. In terminal, do "brew install gtk4"
-3. In terminal, do "make" to see if it's working with gtk4, "./task_manager" to test the application
-4. To get VSCode to recognize gtk4 as a library, make a folder ".vscode" and copy "c_cpp_properties.json" to that folder
