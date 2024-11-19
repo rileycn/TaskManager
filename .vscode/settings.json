@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "system_panel.h": "c",
+        "gtk.h": "c"
+    }
+}
