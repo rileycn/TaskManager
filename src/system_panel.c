@@ -104,7 +104,7 @@ GtkWidget* get_memory_label() {
         }
         free(mem_label);
         free(mem_unit);
-        close(fp);
+        fclose(fp);
     }
     GtkWidget *label = gtk_label_new(NULL);
     const char *format = "<span size=\"small\">\%s</span>";
@@ -146,7 +146,7 @@ GtkWidget* get_processor_label() {
         }
         free(proc_label);
         free(proc_value);
-        close(fp);
+        fclose(fp);
     }
     GtkWidget *label = gtk_label_new(NULL);
     const char *format = "<span size=\"small\">\%s</span>";

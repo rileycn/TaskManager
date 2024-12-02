@@ -4,5 +4,7 @@
 #include <gtk/gtk.h>
 
 GtkWidget* get_resources_panel();
+GtkWidget* create_main_window();
+gboolean update_graphs(GtkWidget* user_data);
 
 #endif
