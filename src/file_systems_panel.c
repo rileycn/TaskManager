@@ -6,13 +6,10 @@
 #include "misc.h"
 
 GtkWidget* get_file_systems_panel() {
-    //GtkWidget *tab = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    //gtk_widget_set_size_request(tab, 800, 600);
     FILE* fp = fopen(MOUNTS_FILE_PATH, "r");
     if (fp == NULL)  {
         return gtk_label_new("<MOUNTS PATH MISSING>");
     }
-    //device, directory, type, total, free, available, used
     GtkListStore *store = gtk_list_store_new(7, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
     char* device_buffer = malloc(MAX_MOUNTS_SIZE);
     char* dir_buffer = malloc(MAX_MOUNTS_SIZE);
@@ -23,45 +20,35 @@ GtkWidget* get_file_systems_panel() {
     free(device_buffer);
     free(dir_buffer);
     free(type_buffer);
-
     GtkWidget *tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
     g_object_unref(store);
     GtkCellRenderer *renderer = NULL;
     GtkTreeViewColumn *column = NULL;
-    
     renderer = gtk_cell_renderer_text_new();
     column = gtk_tree_view_column_new_with_attributes("Device", renderer, "text", 0, NULL);
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
-    
     renderer = gtk_cell_renderer_text_new();
     column = gtk_tree_view_column_new_with_attributes("Directory", renderer, "text", 1, NULL);
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
-    
     renderer = gtk_cell_renderer_text_new();
     column = gtk_tree_view_column_new_with_attributes("Type", renderer, "text", 2, NULL);
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
-    
     renderer = gtk_cell_renderer_text_new();
     column = gtk_tree_view_column_new_with_attributes("Total", renderer, "text", 3, NULL);
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
-    
     renderer = gtk_cell_renderer_text_new();
     column = gtk_tree_view_column_new_with_attributes("Free", renderer, "text", 4, NULL);
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
-
     renderer = gtk_cell_renderer_text_new();
     column = gtk_tree_view_column_new_with_attributes("Available", renderer, "text", 5, NULL);
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
-    
     renderer = gtk_cell_renderer_text_new();
     column = gtk_tree_view_column_new_with_attributes("Used", renderer, "text", 6, NULL);
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
-    
     GtkWidget *scroll = gtk_scrolled_window_new(NULL, NULL);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
     gtk_container_add(GTK_CONTAINER(scroll), tree);
-    
-    //gtk_container_add(GTK_CONTAINER(tab), scroll);
+    fclose(fp);
     return scroll;
 }
 

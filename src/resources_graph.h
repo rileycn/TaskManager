@@ -3,7 +3,7 @@
 
 #include <gtk/gtk.h>
 
-// Function declarations
+
 GtkWidget* create_combined_graph_tab();
 void update_combined_graph(GtkWidget *drawing_area);
 void init_cpu_monitoring();
@@ -12,4 +12,4 @@ void draw_network_graph(GtkWidget *widget, cairo_t *cr, double width, double hei
 void draw_memory_graph(GtkWidget *widget, cairo_t *cr, double width, double height);
 void draw_cpu_graph(GtkWidget *widget, cairo_t *cr, double width, double height);
 
-#endif // GRAPH_H
+#endif

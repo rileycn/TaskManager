@@ -9,7 +9,6 @@
 #include "misc.h"
 
 GtkWidget* get_system_panel() {
-    //Should include, at a minimum, the OS release version, kernel version, amount of memory, processor version, and disk storage.
     GtkWidget *tab = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_widget_set_size_request(tab, 800, 600);
     gtk_container_add(GTK_CONTAINER(tab), get_system_name_label());
