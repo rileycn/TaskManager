@@ -11,146 +11,136 @@
 static gboolean show_user_only = FALSE;
 
 void on_row_activated(GtkTreeView *tree_view, GtkTreePath *path, GtkTreeViewColumn *column, gpointer user_data) {
-  /*
-  g_signal_connect(tree_view, "row-activated", G_CALLBACK(on_row_activated), NULL);
-  */
   GtkTreeModel *model = gtk_tree_view_get_model(tree_view);
   GtkTreeIter iter;
 
-  // Get the selected row
   if (gtk_tree_model_get_iter(model, &iter, path)) {
-      guint pid; // Variable to hold the PID
+    guint pid;
 
-      // Get the PID from the row (column 2)
-      gtk_tree_model_get(model, &iter, 2, &pid, -1);
+    gtk_tree_model_get(model, &iter, 2, &pid, -1);
 
-      // Call the detailed view function
-      show_process_details(pid);
+    show_process_details(pid);
   }
 }
 
 void show_process_details(pid_t pid) {
-    GtkWidget *dialog, *content_area, *label;
-    char buffer[1024];
-    FILE *file;
-    char path[256], process_name[256], user[256], state[16], date_started[64];
-    long unsigned int vsize, rss, shared;
-    long unsigned int utime, stime, start_time;
-    unsigned int uid;
-    double cpu_time_seconds;
-    time_t process_start_epoch;
+  GtkWidget *dialog, *content_area, *label;
+  char buffer[1024];
+  FILE *file;
+  char path[256], process_name[256], user[256], state[16], date_started[64];
+  long unsigned int vsize, rss, shared;
+  long unsigned int utime, stime, start_time;
+  unsigned int uid;
+  double cpu_time_seconds;
+  time_t process_start_epoch;
 
-    // Create a window for the detailed view
-    dialog = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_title(GTK_WINDOW(dialog), "Process Details");
-    gtk_window_set_default_size(GTK_WINDOW(dialog), 400, 300);
+  dialog = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  gtk_window_set_title(GTK_WINDOW(dialog), "Process Details");
+  gtk_window_set_default_size(GTK_WINDOW(dialog), 400, 300);
 
-    // Content area
-    content_area = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
-    gtk_container_add(GTK_CONTAINER(dialog), content_area);
+  content_area = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
+  gtk_container_add(GTK_CONTAINER(dialog), content_area);
 
-    // Retrieve process name
-    snprintf(path, sizeof(path), "/proc/%d/comm", pid);
-    file = fopen(path, "r");
-    if (file) {
-        fgets(process_name, sizeof(process_name), file);
-        fclose(file);
-    } else {
-        snprintf(process_name, sizeof(process_name), "Unknown");
-    }
+  // get process name
+  snprintf(path, sizeof(path), "/proc/%d/comm", pid);
+  file = fopen(path, "r");
+  if (file) {
+    fgets(process_name, sizeof(process_name), file);
+    fclose(file);
+  } else {
+    snprintf(process_name, sizeof(process_name), "Unknown");
+  }
 
-    // Retrieve UID and state
-    snprintf(path, sizeof(path), "/proc/%d/status", pid);
-    file = fopen(path, "r");
-    if (file) {
-        while (fgets(buffer, sizeof(buffer), file)) {
-            if (sscanf(buffer, "Uid:\t%u", &uid) == 1) {
-                struct passwd *pw = getpwuid(uid);
-                if (pw) {
-                    snprintf(user, sizeof(user), "%s", pw->pw_name);
-                } else {
-                    snprintf(user, sizeof(user), "Unknown");
-                }
-            }
-            if (sscanf(buffer, "State:\t%15s", state) == 1) {
-                // State found
-            }
+  // get UID and state
+  snprintf(path, sizeof(path), "/proc/%d/status", pid);
+  file = fopen(path, "r");
+  if (file) {
+    while (fgets(buffer, sizeof(buffer), file)) {
+      if (sscanf(buffer, "Uid:\t%u", &uid) == 1) {
+        struct passwd *pw = getpwuid(uid);
+        if (pw) {
+          snprintf(user, sizeof(user), "%s", pw->pw_name);
+        } else {
+          snprintf(user, sizeof(user), "Unknown");
         }
-        fclose(file);
-    } else {
-        snprintf(user, sizeof(user), "Unknown");
-        snprintf(state, sizeof(state), "Unknown");
+      }
+      sscanf(buffer, "State:\t%15s", state);
     }
+    fclose(file);
+  } else {
+    snprintf(user, sizeof(user), "Unknown");
+    snprintf(state, sizeof(state), "Unknown");
+  }
 
-    // Retrieve memory and CPU details
-    snprintf(path, sizeof(path), "/proc/%d/stat", pid);
-    file = fopen(path, "r");
-    if (file) {
-        fscanf(file,
-               "%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu %lu %*d %*d %*d %*d %lu",
-               &utime, &stime, &start_time);
-        fclose(file);
-    }
+  // get memory and CPU details
+  snprintf(path, sizeof(path), "/proc/%d/stat", pid);
+  file = fopen(path, "r");
+  if (file) {
+    fscanf(file,
+        "%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu %lu %*d %*d %*d %*d %lu",
+        &utime, &stime, &start_time);
+    fclose(file);
+  }
 
-    snprintf(path, sizeof(path), "/proc/%d/statm", pid);
-    file = fopen(path, "r");
-    if (file) {
-        fscanf(file, "%lu %lu %lu", &vsize, &rss, &shared);
-        fclose(file);
-    }
+  snprintf(path, sizeof(path), "/proc/%d/statm", pid);
+  file = fopen(path, "r");
+  if (file) {
+    fscanf(file, "%lu %lu %lu", &vsize, &rss, &shared);
+    fclose(file);
+  }
 
-    // Calculate CPU time
-    long ticks_per_second = sysconf(_SC_CLK_TCK);
-    cpu_time_seconds = (utime + stime) / (double)ticks_per_second;
+  // calculate CPU time
+  long ticks_per_second = sysconf(_SC_CLK_TCK);
+  cpu_time_seconds = (utime + stime) / (double)ticks_per_second;
 
-    // Calculate process start time
-    file = fopen("/proc/uptime", "r");
-    double system_uptime;
-    if (file) {
-        fscanf(file, "%lf", &system_uptime);
-        fclose(file);
-    } else {
-        system_uptime = 0.0;
-    }
+  // calculate process start time
+  file = fopen("/proc/uptime", "r");
+  double system_uptime;
+  if (file) {
+    fscanf(file, "%lf", &system_uptime);
+    fclose(file);
+  } else {
+    system_uptime = 0.0;
+  }
 
-    double process_start_seconds = start_time / (double)ticks_per_second;
-    process_start_epoch = time(NULL) - (time_t)system_uptime + (time_t)process_start_seconds;
-    strftime(date_started, sizeof(date_started), "%Y-%m-%d %H:%M:%S", localtime(&process_start_epoch));
+  double process_start_seconds = start_time / (double)ticks_per_second;
+  process_start_epoch = time(NULL) - (time_t)system_uptime + (time_t)process_start_seconds;
+  strftime(date_started, sizeof(date_started), "%Y-%m-%d %H:%M:%S", localtime(&process_start_epoch));
 
-    // Display all details
-    snprintf(buffer, sizeof(buffer), "Process Name: %s", process_name);
-    label = gtk_label_new(buffer);
-    gtk_box_pack_start(GTK_BOX(content_area), label, FALSE, FALSE, 0);
+  // ui stuff
+  snprintf(buffer, sizeof(buffer), "Process Name: %s", process_name);
+  label = gtk_label_new(buffer);
+  gtk_box_pack_start(GTK_BOX(content_area), label, FALSE, FALSE, 0);
 
-    snprintf(buffer, sizeof(buffer), "User: %s", user);
-    label = gtk_label_new(buffer);
-    gtk_box_pack_start(GTK_BOX(content_area), label, FALSE, FALSE, 0);
+  snprintf(buffer, sizeof(buffer), "User: %s", user);
+  label = gtk_label_new(buffer);
+  gtk_box_pack_start(GTK_BOX(content_area), label, FALSE, FALSE, 0);
 
-    snprintf(buffer, sizeof(buffer), "State: %s", state);
-    label = gtk_label_new(buffer);
-    gtk_box_pack_start(GTK_BOX(content_area), label, FALSE, FALSE, 0);
+  snprintf(buffer, sizeof(buffer), "State: %s", state);
+  label = gtk_label_new(buffer);
+  gtk_box_pack_start(GTK_BOX(content_area), label, FALSE, FALSE, 0);
 
-    snprintf(buffer, sizeof(buffer), "Memory (Virtual): %lu KB", vsize * 4);
-    label = gtk_label_new(buffer);
-    gtk_box_pack_start(GTK_BOX(content_area), label, FALSE, FALSE, 0);
+  snprintf(buffer, sizeof(buffer), "Memory (Virtual): %lu KB", vsize * 4);
+  label = gtk_label_new(buffer);
+  gtk_box_pack_start(GTK_BOX(content_area), label, FALSE, FALSE, 0);
 
-    snprintf(buffer, sizeof(buffer), "Memory (Resident): %lu KB", rss * 4);
-    label = gtk_label_new(buffer);
-    gtk_box_pack_start(GTK_BOX(content_area), label, FALSE, FALSE, 0);
+  snprintf(buffer, sizeof(buffer), "Memory (Resident): %lu KB", rss * 4);
+  label = gtk_label_new(buffer);
+  gtk_box_pack_start(GTK_BOX(content_area), label, FALSE, FALSE, 0);
 
-    snprintf(buffer, sizeof(buffer), "Memory (Shared): %lu KB", shared * 4);
-    label = gtk_label_new(buffer);
-    gtk_box_pack_start(GTK_BOX(content_area), label, FALSE, FALSE, 0);
+  snprintf(buffer, sizeof(buffer), "Memory (Shared): %lu KB", shared * 4);
+  label = gtk_label_new(buffer);
+  gtk_box_pack_start(GTK_BOX(content_area), label, FALSE, FALSE, 0);
 
-    snprintf(buffer, sizeof(buffer), "CPU Time: %.2f seconds", cpu_time_seconds);
-    label = gtk_label_new(buffer);
-    gtk_box_pack_start(GTK_BOX(content_area), label, FALSE, FALSE, 0);
+  snprintf(buffer, sizeof(buffer), "CPU Time: %.2f seconds", cpu_time_seconds);
+  label = gtk_label_new(buffer);
+  gtk_box_pack_start(GTK_BOX(content_area), label, FALSE, FALSE, 0);
 
-    snprintf(buffer, sizeof(buffer), "Start Time: %s", date_started);
-    label = gtk_label_new(buffer);
-    gtk_box_pack_start(GTK_BOX(content_area), label, FALSE, FALSE, 0);
+  snprintf(buffer, sizeof(buffer), "Start Time: %s", date_started);
+  label = gtk_label_new(buffer);
+  gtk_box_pack_start(GTK_BOX(content_area), label, FALSE, FALSE, 0);
 
-    gtk_widget_show_all(dialog);
+  gtk_widget_show_all(dialog);
 }
 
 void stop_process(pid_t pid) {
@@ -172,13 +162,123 @@ void kill_process(pid_t pid) {
 }
 
 void list_mem_maps(pid_t pid) {
-  char path[256];
-  snprintf(path, sizeof(path), "/proc/%d/maps", pid);
-  if (fork() == 0) {
-    execlp("xdg-open", "xdg-open", path, NULL);
-    perror("execlp failed!");
-    exit(1);
-  }
+    char path[256];
+    snprintf(path, sizeof(path), "/proc/%d/smaps", pid);
+
+    FILE *file = fopen(path, "r");
+    if (!file) {
+        perror("Failed to open smaps");
+        return;
+    }
+
+    // debug printf("Opened smaps file for PID: %d\n", pid); // Debug
+
+    GtkWidget *dialog = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_title(GTK_WINDOW(dialog), "Memory Maps");
+    gtk_window_set_default_size(GTK_WINDOW(dialog), 800, 400);
+
+    GtkWidget *scrolled_window = gtk_scrolled_window_new(NULL, NULL);
+    gtk_container_add(GTK_CONTAINER(dialog), scrolled_window);
+
+    GtkListStore *list_store = gtk_list_store_new(10,
+        G_TYPE_STRING,
+        G_TYPE_STRING,
+        G_TYPE_STRING,
+        G_TYPE_STRING,
+        G_TYPE_STRING,
+        G_TYPE_STRING,
+        G_TYPE_STRING,
+        G_TYPE_STRING,
+        G_TYPE_STRING,
+        G_TYPE_STRING
+    );
+
+    GtkWidget *tree_view = gtk_tree_view_new_with_model(GTK_TREE_MODEL(list_store));
+
+    const char *column_titles[] = {
+        "Filename", "VM Start", "VM End", "VM Size", "Flags",
+        "VM Offset", "Private Clean", "Private Dirty",
+        "Shared Clean", "Shared Dirty"
+    };
+
+    for (int i = 0; i < 10; i++) {
+        GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
+        GtkTreeViewColumn *column = gtk_tree_view_column_new_with_attributes(
+            column_titles[i], renderer, "text", i, NULL);
+        gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
+    }
+
+    gtk_container_add(GTK_CONTAINER(scrolled_window), tree_view);
+
+    // parse /proc/<pid>/smaps
+    char line[512];
+    char vm_start[64], vm_end[64], flags[8], vm_offset[64], filename[256];
+    unsigned long vm_size, private_clean, private_dirty, shared_clean, shared_dirty;
+
+    vm_start[0] = vm_end[0] = flags[0] = vm_offset[0] = filename[0] = '\0';
+    vm_size = private_clean = private_dirty = shared_clean = shared_dirty = 0;
+
+    while (fgets(line, sizeof(line), file)) {
+        // debugging printf("Raw line: %s", line);
+
+        if (sscanf(line, "%64[^-]-%64s %8s %64s %*s %*s %255[^\n]",
+                   vm_start, vm_end, flags, vm_offset, filename) >= 4) {
+
+            if (strlen(filename) == 0) {
+                strcpy(filename, "[anonymous]");
+            }
+
+            if (strlen(vm_start) > 0) {
+                GtkTreeIter iter;
+                gtk_list_store_append(list_store, &iter);
+                gtk_list_store_set(list_store, &iter,
+                                   0, filename,
+                                   1, vm_start,
+                                   2, vm_end,
+                                   3, g_strdup_printf("%lu kB", vm_size),
+                                   4, flags,
+                                   5, vm_offset,
+                                   6, g_strdup_printf("%lu kB", private_clean),
+                                   7, g_strdup_printf("%lu kB", private_dirty),
+                                   8, g_strdup_printf("%lu kB", shared_clean),
+                                   9, g_strdup_printf("%lu kB", shared_dirty),
+                                   -1);
+
+            }
+
+            vm_size = private_clean = private_dirty = shared_clean = shared_dirty = 0;
+        }
+
+        sscanf(line, "Size: %lu kB", &vm_size);
+        sscanf(line, "Private_Clean: %lu kB", &private_clean);
+        sscanf(line, "Private_Dirty: %lu kB", &private_dirty);
+        sscanf(line, "Shared_Clean: %lu kB", &shared_clean);
+        sscanf(line, "Shared_Dirty: %lu kB", &shared_dirty);
+    }
+
+    if (strlen(vm_start) > 0) {
+        GtkTreeIter iter;
+        gtk_list_store_append(list_store, &iter);
+        gtk_list_store_set(list_store, &iter,
+                           0, filename,
+                           1, vm_start,
+                           2, vm_end,
+                           3, g_strdup_printf("%lu kB", vm_size),
+                           4, flags,
+                           5, vm_offset,
+                           6, g_strdup_printf("%lu kB", private_clean),
+                           7, g_strdup_printf("%lu kB", private_dirty),
+                           8, g_strdup_printf("%lu kB", shared_clean),
+                           9, g_strdup_printf("%lu kB", shared_dirty),
+                           -1);
+
+        // debuggprintf("Added mapping to GtkListStore (last mapping): %s - %s\n", vm_start, vm_end);
+    }
+
+    fclose(file);
+    // debgu printf("Finished parsing smaps.\n");
+
+    gtk_widget_show_all(dialog);
 }
 
 int parse_process(int pid, process_info *info) {
@@ -253,7 +353,7 @@ void list_open_files(pid_t pid) {
   column = gtk_tree_view_column_new_with_attributes("Object", renderer, "text", 2, NULL);
   gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
   gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dialog))),
-                     tree_view, TRUE, TRUE, 5);
+      tree_view, TRUE, TRUE, 5);
   gtk_widget_show_all(dialog);
   g_signal_connect(dialog, "response", G_CALLBACK(gtk_widget_destroy), NULL);
 }
@@ -308,52 +408,52 @@ void build_tree(GtkTreeStore *store, GtkTreeIter *parent, int ppid, gboolean fil
       int pid = atoi(entry->d_name);
       process_info pinfo = {};
       if ((parse_process(pid, &pinfo) && pinfo.ppid == ppid) || filter_user) {      
-	      char stat_path[256], comm_path[256], status_path[256];
-	      snprintf(stat_path, sizeof(stat_path), "/proc/%s/stat", entry->d_name);
-	      snprintf(comm_path, sizeof(comm_path), "/proc/%s/comm", entry->d_name);
-	      snprintf(status_path, sizeof(status_path), "/proc/%s/status", entry->d_name);
-	      FILE *stat_file = fopen(stat_path, "r");
-	      FILE *comm_file = fopen(comm_path, "r");
-	      FILE *status_file = fopen(status_path, "r");
-	      if (stat_file && comm_file && status_file) {
-		char name[256];
-		long pid;
-		char state;
-		long rss;
-		uid_t uid;
-		if (fgets(name, sizeof(name), comm_file)) {
-		  name[strcspn(name, "\n")] = '\0';
-		}
-		char line[256];
-		while (fgets(line, sizeof(line), status_file)) {
-		  if (strncmp(line, "Uid:", 4) == 0) {
-		    sscanf(line, "Uid:\t%u", &uid);
-		    break;
-		  }
-		}
-		if (filter_user && uid != current_user_uid) {
-		  fclose(stat_file);
-		  fclose(comm_file);
-		  fclose(status_file);
-		  continue;
-		}
-		fscanf(stat_file, "%ld %*s %c %*d %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %*u %*u %*u %*d %*d %*d %*d %ld",
-		    &pid, &state, &rss);
-		fclose(stat_file);
-		fclose(comm_file);
-		fclose(status_file);
-		float memory = rss * 4 / 1024.0;
-		gtk_tree_store_append(store, &iter, parent);
-		gtk_tree_store_set(store, &iter,
-		    0, name,
-		    1, state == 'R' ? "Running" : "Sleeping",
-		    2, pid,
-		    3, memory,
-		    -1);
-	      	}
-	      	if (!filter_user) {
-	      	  build_tree(store, &iter, pid, filter_user);
-	      	}
+        char stat_path[256], comm_path[256], status_path[256];
+        snprintf(stat_path, sizeof(stat_path), "/proc/%s/stat", entry->d_name);
+        snprintf(comm_path, sizeof(comm_path), "/proc/%s/comm", entry->d_name);
+        snprintf(status_path, sizeof(status_path), "/proc/%s/status", entry->d_name);
+        FILE *stat_file = fopen(stat_path, "r");
+        FILE *comm_file = fopen(comm_path, "r");
+        FILE *status_file = fopen(status_path, "r");
+        if (stat_file && comm_file && status_file) {
+          char name[256];
+          long pid;
+          char state;
+          long rss;
+          uid_t uid;
+          if (fgets(name, sizeof(name), comm_file)) {
+            name[strcspn(name, "\n")] = '\0';
+          }
+          char line[256];
+          while (fgets(line, sizeof(line), status_file)) {
+            if (strncmp(line, "Uid:", 4) == 0) {
+              sscanf(line, "Uid:\t%u", &uid);
+              break;
+            }
+          }
+          if (filter_user && uid != current_user_uid) {
+            fclose(stat_file);
+            fclose(comm_file);
+            fclose(status_file);
+            continue;
+          }
+          fscanf(stat_file, "%ld %*s %c %*d %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %*u %*u %*u %*d %*d %*d %*d %ld",
+              &pid, &state, &rss);
+          fclose(stat_file);
+          fclose(comm_file);
+          fclose(status_file);
+          float memory = rss * 4 / 1024.0;
+          gtk_tree_store_append(store, &iter, parent);
+          gtk_tree_store_set(store, &iter,
+              0, name,
+              1, state == 'R' ? "Running" : "Sleeping",
+              2, pid,
+              3, memory,
+              -1);
+        }
+        if (!filter_user) {
+          build_tree(store, &iter, pid, filter_user);
+        }
       }
     }
   }
