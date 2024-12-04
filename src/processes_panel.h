@@ -13,5 +13,7 @@ typedef struct {
 GtkWidget* get_processes_panel();
 void build_tree(GtkTreeStore *store, GtkTreeIter *parent, int ppid, gboolean filter_user);
 int parse_process(int pid, process_info *info);
+void on_row_activated(GtkTreeView *tree_view, GtkTreePath *path, GtkTreeViewColumn *column, gpointer user_data);
+void show_process_details(pid_t pid);
 
 #endif

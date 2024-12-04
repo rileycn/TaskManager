@@ -11,19 +11,22 @@
 static gboolean show_user_only = FALSE;
 
 void on_row_activated(GtkTreeView *tree_view, GtkTreePath *path, GtkTreeViewColumn *column, gpointer user_data) {
-    GtkTreeModel *model = gtk_tree_view_get_model(tree_view);
-    GtkTreeIter iter;
+  /*
+  g_signal_connect(tree_view, "row-activated", G_CALLBACK(on_row_activated), NULL);
+  */
+  GtkTreeModel *model = gtk_tree_view_get_model(tree_view);
+  GtkTreeIter iter;
 
-    // Get the selected row
-    if (gtk_tree_model_get_iter(model, &iter, path)) {
-        guint pid; // Variable to hold the PID
+  // Get the selected row
+  if (gtk_tree_model_get_iter(model, &iter, path)) {
+      guint pid; // Variable to hold the PID
 
-        // Get the PID from the row (column 2)
-        gtk_tree_model_get(model, &iter, 2, &pid, -1);
+      // Get the PID from the row (column 2)
+      gtk_tree_model_get(model, &iter, 2, &pid, -1);
 
-        // Call the detailed view function
-        show_process_details(pid);
-    }
+      // Call the detailed view function
+      show_process_details(pid);
+  }
 }
 
 void show_process_details(pid_t pid) {
@@ -149,6 +152,7 @@ void show_process_details(pid_t pid) {
 
     gtk_widget_show_all(dialog);
 }
+
 void stop_process(pid_t pid) {
   if (kill(pid, SIGSTOP)) {
     perror("Coudn't stop process");
@@ -393,6 +397,7 @@ GtkWidget *get_processes_panel() {
   column = gtk_tree_view_column_new_with_attributes("Memory (MB)", renderer, "text", 3, NULL);
   gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
   g_signal_connect(tree_view, "button-press-event", G_CALLBACK(on_tree_view_button_press), NULL);
+  g_signal_connect(tree_view, "row-activated", G_CALLBACK(on_row_activated), NULL);
   GtkWidget *scrolled_window = gtk_scrolled_window_new(NULL, NULL);
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
   gtk_container_add(GTK_CONTAINER(scrolled_window), tree_view);
