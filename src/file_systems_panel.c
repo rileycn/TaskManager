@@ -10,7 +10,6 @@ gboolean filter_func(GtkTreeModel *model, GtkTreeIter *iter, gpointer data) {
     gchar* row_text;
     gtk_tree_model_get(model, iter, 0, &row_text, -1);
     gboolean visible = g_strstr_len(row_text, -1, search_text) != NULL;
-    printf("%s\n", row_text);
     g_free(row_text);
     return visible;
 }

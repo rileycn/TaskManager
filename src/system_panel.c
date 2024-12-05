@@ -10,6 +10,8 @@
 
 GtkWidget* get_system_panel() {
     GtkWidget *tab = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    gtk_box_set_homogeneous(GTK_BOX(tab), FALSE);
+    gtk_widget_set_halign(tab, GTK_ALIGN_CENTER);
     gtk_widget_set_size_request(tab, 800, 600);
     gtk_container_add(GTK_CONTAINER(tab), get_system_name_label());
     gtk_container_add(GTK_CONTAINER(tab), get_os_release_label());
@@ -17,6 +19,7 @@ GtkWidget* get_system_panel() {
     gtk_container_add(GTK_CONTAINER(tab), get_memory_label());
     gtk_container_add(GTK_CONTAINER(tab), get_processor_label());
     gtk_container_add(GTK_CONTAINER(tab), get_disk_storage_label());
+    gtk_box_pack_start(GTK_CONTAINER(tab), get_dark_mode_widget(), FALSE, FALSE, 0);
     return tab;
 }
 
@@ -184,4 +187,22 @@ GtkWidget* get_disk_storage_label() {
     free(disk_info);
     free(print_string);
     return label;
+}
+
+void toggle_dark_mode(GtkToggleButton *toggle_button, gpointer user_data) {
+    GtkSettings *settings = gtk_settings_get_default();
+    gboolean active = gtk_toggle_button_get_active(toggle_button);
+    g_object_set(settings, "gtk-application-prefer-dark-theme", active, NULL);
+}
+
+GtkWidget* get_dark_mode_widget() {
+    GtkWidget *checkbox = gtk_check_button_new_with_label("Dark Mode");
+    GtkSettings *settings = gtk_settings_get_default();
+    gboolean prefer_dark_theme = FALSE;
+    g_object_get(settings, "gtk-application-prefer-dark-theme", &prefer_dark_theme, NULL);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox), prefer_dark_theme);
+    gtk_widget_set_halign(checkbox, GTK_ALIGN_CENTER);
+    gtk_widget_set_valign(checkbox, GTK_ALIGN_CENTER);
+    g_signal_connect(checkbox, "toggled", G_CALLBACK(toggle_dark_mode), NULL);
+    return checkbox;
 }

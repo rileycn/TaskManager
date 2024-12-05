@@ -21,5 +21,7 @@ GtkWidget* get_kernel_version_label();
 GtkWidget* get_memory_label();
 GtkWidget* get_processor_label();
 GtkWidget* get_disk_storage_label();
+void toggle_dark_mode(GtkToggleButton *toggle_button, gpointer user_data);
+GtkWidget* get_dark_mode_widget();
 
 #endif
