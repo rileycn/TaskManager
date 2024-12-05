@@ -5,6 +5,7 @@
 
 
 GtkWidget* create_combined_graph_tab();
+
 void update_combined_graph(GtkWidget *drawing_area);
 void init_cpu_monitoring();
 gboolean draw_combined_graph(GtkWidget *widget, cairo_t *cr, gpointer data);

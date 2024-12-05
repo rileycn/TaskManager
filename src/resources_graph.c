@@ -5,7 +5,9 @@
 #include "resources_data.h"
 
 #define MAX_CPUS 256
+
 #define CPU_LIMIT 32
+
 #define HISTORY_SIZE 100
 
 double cpu_usage_history[MAX_CPUS + 1][HISTORY_SIZE];
